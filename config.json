@@ -1,0 +1,10 @@
+{
+    "CAZYBASEURL" : "http://www.cazy.org",
+
+    "CAZYGENOMES" : {
+         "archaea"    : "a.html",
+         "bacteria"   : "b.html",
+         "eukaryotes" : "e.html",
+         "viruses"    : "v.html"
+    }
+}
