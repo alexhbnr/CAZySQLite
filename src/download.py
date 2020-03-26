@@ -30,7 +30,8 @@ def soup_process_species(url, datavalue):
     print(species_name)
     # NCBI taxid
     species_taxid = soup.find_all(target="ncbitaxid")[0].string
-    if not re.search("unreleased", str(soup)):
+    if (not re.search("unreleased", str(soup))
+            and not re.search("This genome does not contain CAZymes", str(soup))):
         # Generate Pandas DataFrame
         df = pd.read_html(str(soup.find_all("table")[-1]),
                           skiprows=1, header=0)[0] \
