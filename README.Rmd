@@ -1,0 +1,100 @@
+---
+title: "SQLite database for CAZy.org"
+output:
+    github_document
+---
+
+```{r libraries, echo=F}
+library(knitr)
+library(rmarkdown)
+opts_chunk$set(echo=T, warning=F, message=F)
+```
+
+This repository provides the information stored at http://www.cazy.org as
+computer-readable SQLite database. For this, it reads information stored as HTML
+tables on the website into tabular data interpretable by Python and makes the
+information available as a SQLite database.
+
+# Preparation of database file prior to usage
+
+The repository comes with the pre-generated SQLite database file. Due to the
+size limitations of GitHub, the SQLite database is compressed using
+[bzip2](https://www.sourceware.org/bzip2/). In order to use it, we have to
+decompress it locally using
+
+```{bash, eval=F}
+bunzip2 -k CAZyme_genomes.db.bz2`
+```
+
+The decompressed SQLite database can be used like any regular SQLite database. 
+
+# Structure of the SQLite database
+
+Here, I will use the scripting language R to illustrate the content of the
+SQLite database. For this, we will use the two R packages
+[DBI](https://cran.r-project.org/web/packages/DBI/index.html) and
+[RSQLite](https://cran.r-project.org/web/packages/RSQLite/index.html).
+
+```{r}
+# Check if packages for connecting to the database are available
+if (!all(c("RSQLite", "DBI") %in% installed.packages())) {
+    install.packages(c("DBI", "RSQLite"))
+}
+library(RSQLite)
+library(DBI)
+library(magrittr)
+```
+
+We can open a connection to the database using the function `dbConnect`:
+
+```{r}
+conn <- dbConnect(RSQLite::SQLite(), "CAZyme_genomes.db")
+```
+
+By using `dbListTables`, we get an overview of the tables present in the
+database:
+
+```{r}
+dbListTables(conn)
+```
+
+## Table "genomes"
+
+The table **"genomes"** contains the information which CAZyme genes are present
+in each genome. It has four different columns:
+
+```{r}
+dbListFields(conn, "genomes")
+```
+
+  - *name*: the name of the genome
+  - *protein*: the name of the protein
+  - *family*: the CAZy enzyme classification
+  - *refAcc*: the NCBI GenBank reference ID of the protein
+
+An example of the output looks like follows:
+
+```{r}
+dbReadTable(conn, "genomes") %>%
+head(10)
+```
+
+## Table "taxids"
+
+The table **"taxids"** contains the information on taxonomic information of the
+genomes. It has three different columns:
+
+```{r}
+dbListFields(conn, "taxids")
+```
+
+  - *name*: the name of the genome
+  - *taxid*: the NCBI taxonomy ID
+  - *superkingdom*: the superkingdom category it was classified in on cazy.org
+
+An example of the output looks like follows:
+
+```{r}
+dbReadTable(conn, "taxids") %>%
+head(10)
+```
