@@ -1,12 +1,19 @@
 SQLite database for CAZy.org
 ================
 
+  - [Preparation of database file prior to
+    usage](#preparation-of-database-file-prior-to-usage)
+  - [Structure of the SQLite
+    database](#structure-of-the-sqlite-database)
+      - [Table “genomes”](#table-genomes)
+      - [Table “taxids”](#table-taxids)
+
 This repository provides the information stored at <http://www.cazy.org>
 as computer-readable SQLite database. For this, it reads information
 stored as HTML tables on the website into tabular data interpretable by
 Python and makes the information available as a SQLite database.
 
-# Preparation of database file prior to usage
+## Preparation of database file prior to usage
 
 The repository comes with the pre-generated SQLite database file. Due to
 the size limitations of GitHub, the SQLite database is compressed using
@@ -14,13 +21,13 @@ the size limitations of GitHub, the SQLite database is compressed using
 to decompress it locally using
 
 ``` bash
-bunzip2 -k CAZyme_genomes.db.bz2`
+bunzip2 -k CAZyme_genomes.db.bz2
 ```
 
 The decompressed SQLite database can be used like any regular SQLite
 database.
 
-# Structure of the SQLite database
+## Structure of the SQLite database
 
 Here, I will use the scripting language R to illustrate the content of
 the SQLite database. For this, we will use the two R packages
@@ -52,16 +59,10 @@ dbListTables(conn)
 
     ## [1] "genomes" "taxids"
 
-## Table “genomes”
+### Table “genomes”
 
 The table **“genomes”** contains the information which CAZyme genes are
 present in each genome. It has four different columns:
-
-``` r
-dbListFields(conn, "genomes")
-```
-
-    ## [1] "name"    "protein" "family"  "refAcc"
 
   - *name*: the name of the genome
   - *protein*: the name of the protein
@@ -69,11 +70,6 @@ dbListFields(conn, "genomes")
   - *refAcc*: the NCBI GenBank reference ID of the protein
 
 An example of the output looks like follows:
-
-``` r
-dbReadTable(conn, "genomes") %>%
-head(10)
-```
 
     ##                       name                   protein family     refAcc
     ## 1  Absiella argi JCM 30884          Aargi30884_00940   GH23 BBK21191.1
@@ -87,16 +83,10 @@ head(10)
     ## 9  Absiella argi JCM 30884 Aargi30884_08810 (Bgla_1)    GH1 BBK21978.1
     ## 10 Absiella argi JCM 30884          Aargi30884_09640    CE4 BBK22061.1
 
-## Table “taxids”
+### Table “taxids”
 
 The table **“taxids”** contains the information on taxonomic information
 of the genomes. It has three different columns:
-
-``` r
-dbListFields(conn, "taxids")
-```
-
-    ## [1] "name"         "taxid"        "superkingdom"
 
   - *name*: the name of the genome
   - *taxid*: the NCBI taxonomy ID
@@ -104,11 +94,6 @@ dbListFields(conn, "taxids")
     cazy.org
 
 An example of the output looks like follows:
-
-``` r
-dbReadTable(conn, "taxids") %>%
-head(10)
-```
 
     ##                                   name   taxid superkingdom
     ## 1              Absiella argi JCM 30884 1671597     bacteria
