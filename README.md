@@ -7,11 +7,16 @@ SQLite database for CAZy.org
     database](#structure-of-the-sqlite-database)
       - [Table “genomes”](#table-genomes)
       - [Table “taxids”](#table-taxids)
+      - [Table “ncbitaxonomy”](#table-ncbitaxonomy)
 
 This repository provides the information stored at <http://www.cazy.org>
-as computer-readable SQLite database. For this, it reads information
-stored as HTML tables on the website into tabular data interpretable by
-Python and makes the information available as a SQLite database.
+as computer-readable SQLite database. For this, it scrapes information
+stored as HTML tables on the website into tabular data using Python and
+makes the information available as a SQLite database.
+
+Additionally to the information provided at <http://www.cazy.org>, it
+adds further information, e.g. on the taxonomy of each species, or
+cross-identification of proteins to the eggNOG database.
 
 ## Preparation of database file prior to usage
 
@@ -57,7 +62,7 @@ database:
 dbListTables(conn)
 ```
 
-    ## [1] "genomes" "taxids"
+    ## [1] "genomes"      "ncbitaxonomy" "taxids"
 
 ### Table “genomes”
 
@@ -85,11 +90,12 @@ An example of the output looks like follows:
 
 ### Table “taxids”
 
-The table **“taxids”** contains the information on taxonomic information
-of the genomes. It has three different columns:
+The table **“taxids”** contains the information on the taxonomy of the
+genomes provided by the cazy.org website. It has three different
+columns:
 
   - *name*: the name of the genome
-  - *taxid*: the NCBI taxonomy ID
+  - *taxid*: the NCBI taxonomy ID provided by cazy.org
   - *superkingdom*: the superkingdom category it was classified in on
     cazy.org
 
@@ -106,3 +112,29 @@ An example of the output looks like follows:
     ## 8     Acetobacter ghanensis LMG 23848T  431306     bacteria
     ## 9          Acetobacter orientalis FAN1  146474     bacteria
     ## 10   Acetobacter oryzifermentans SLV-7 1633874     bacteria
+
+### Table “ncbitaxonomy”
+
+The table **“ncbitaxonomy”** contains the information on the taxonomic
+lineage of each taxonomic ID available in the table **“taxids”**
+provided by NCBI. It has nine columns:
+
+  - *taxid*: the NCBI taxonomy ID provided by cazy.org
+  - *NCBItaxid*: the corresponding NCBI taxonomy ID; different from
+    *taxid* when updated in the NCBI taxonomy database
+  - *superkingdom* to *species*: the name of the taxonomic ranks for the
+    lineage defined by the NCBI taxonomy ID
+
+An example of the output looks like follows:
+
+    ##      taxid NCBItaxid superkingdom         phylum               class              order                family           genus                     species
+    ## 1  1671597   1671597     Bacteria     Firmicutes    Erysipelotrichia Erysipelotrichales   Erysipelotrichaceae        Absiella               Absiella argi
+    ## 2  2583452   2583452     Bacteria     Firmicutes    Erysipelotrichia Erysipelotrichales   Erysipelotrichaceae        Absiella        Absiella sp. 9CBEGH2
+    ## 3   329726    329726     Bacteria  Cyanobacteria                        Synechococcales    Acaryochloridaceae   Acaryochloris        Acaryochloris marina
+    ## 4   499177    499177     Bacteria     Firmicutes          Clostridia      Clostridiales Peptostreptococcaceae Acetoanaerobium Acetoanaerobium sticklandii
+    ## 5      435       435     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter           Acetobacter aceti
+    ## 6   481146    481146     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter       Acetobacter ascendens
+    ## 7   431306    431306     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter       Acetobacter ghanensis
+    ## 8   146474    146474     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter      Acetobacter orientalis
+    ## 9  1633874   1633874     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter Acetobacter oryzifermentans
+    ## 10 2500548   2500548     Bacteria Proteobacteria Alphaproteobacteria   Rhodospirillales      Acetobacteraceae     Acetobacter        Acetobacter oryzoeni

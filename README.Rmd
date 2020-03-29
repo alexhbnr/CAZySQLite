@@ -12,9 +12,13 @@ opts_chunk$set(echo=T, warning=F, message=F)
 ```
 
 This repository provides the information stored at http://www.cazy.org as
-computer-readable SQLite database. For this, it reads information stored as HTML
-tables on the website into tabular data interpretable by Python and makes the
-information available as a SQLite database.
+computer-readable SQLite database. For this, it scrapes information stored as HTML
+tables on the website into tabular data using Python and makes the information
+available as a SQLite database.
+
+Additionally to the information provided at http://www.cazy.org, it adds further
+information, e.g. on the taxonomy of each species, or cross-identification of
+proteins to the eggNOG database.
 
 ## Preparation of database file prior to usage
 
@@ -78,16 +82,35 @@ head(10)
 
 ### Table "taxids"
 
-The table **"taxids"** contains the information on taxonomic information of the
-genomes. It has three different columns:
+The table **"taxids"** contains the information on the taxonomy of the genomes
+provided by the cazy.org website. It has three different columns:
 
   - *name*: the name of the genome
-  - *taxid*: the NCBI taxonomy ID
+  - *taxid*: the NCBI taxonomy ID provided by cazy.org
   - *superkingdom*: the superkingdom category it was classified in on cazy.org
 
 An example of the output looks like follows:
 
 ```{r, echo = F}
 dbReadTable(conn, "taxids") %>%
+head(10)
+```
+
+### Table "ncbitaxonomy"
+
+The table **"ncbitaxonomy"** contains the information on the taxonomic lineage of
+each taxonomic ID available in the table **"taxids"** provided by NCBI. It has
+nine columns:
+
+  - *taxid*: the NCBI taxonomy ID provided by cazy.org
+  - *NCBItaxid*: the corresponding NCBI taxonomy ID; different from *taxid* when
+    updated in the NCBI taxonomy database
+  - *superkingdom* to *species*: the name of the taxonomic ranks for the lineage
+    defined by the NCBI taxonomy ID
+
+An example of the output looks like follows:
+
+```{r, echo = F}
+dbReadTable(conn, "ncbitaxonomy") %>%
 head(10)
 ```
