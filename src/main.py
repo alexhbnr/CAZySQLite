@@ -14,6 +14,7 @@ import json
 import pandas as pd
 
 import download
+import ncbitaxa
 import utils
 
 
@@ -34,27 +35,35 @@ def main():
             del genome_categories['eukaryotes']
         if Args['noviruses']:
             del genome_categories['viruses']
-    if len(genome_categories.keys()) > 0:
-        utils.create_dirs(Args['output'])
-        protein_dfs = []
-        taxids_dfs = []
-        for cat in genome_categories.keys():
-            print(f"Download genome category {cat}", file=sys.stderr)
-            proteins, taxids = download.download_genomes(config, cat)
-            protein_dfs.append(proteins)
-            taxids_dfs.append(taxids)
-        print("Write protein list to SQLite3 database", file=sys.stderr)
-        pd.concat(protein_dfs) \
-            .to_sql("genomes", sqlite3.connect(Args['output']),
-                    index=False, if_exists=Args['tablemode'])
-        print("Write taxid list to SQLite3 database", file=sys.stderr)
-        pd.concat(taxids_dfs) \
-            .to_sql("taxids", sqlite3.connect(Args['output']),
-                    index=False, if_exists=Args['tablemode'])
-    else:
-        print("All genome categories were excluded from downloading. At least"
-              " one genome category must be enabled.", file=sys.stderr)
-        sys.exit(1)
+        if len(genome_categories.keys()) > 0:
+            utils.create_dirs(Args['output'])
+            protein_dfs = []
+            taxids_dfs = []
+            for cat in genome_categories.keys():
+                print(f"Download genome category {cat}", file=sys.stderr)
+                proteins, taxids = download.download_genomes(config, cat)
+                protein_dfs.append(proteins)
+                taxids_dfs.append(taxids)
+            print("Write protein list to SQLite3 database", file=sys.stderr)
+            pd.concat(protein_dfs) \
+                .to_sql("genomes", sqlite3.connect(Args['output']),
+                        index=False, if_exists=Args['tablemode'])
+            print("Write taxid list to SQLite3 database", file=sys.stderr)
+            pd.concat(taxids_dfs) \
+                .to_sql("taxids", sqlite3.connect(Args['output']),
+                        index=False, if_exists=Args['tablemode'])
+        else:
+            print("All genome categories were excluded from downloading. At "
+                  "least one genome category must be enabled.",
+                  file=sys.stderr)
+            sys.exit(1)
+
+        if not Args['notaxonomy']:
+            ncbitaxa.update_taxonomy(Args['updateNCBItaxonomy'])
+            unique_taxids = pd.concat(taxids_dfs)['taxid'].unique()
+            ncbitaxa.infer_taxonomy_lineage(unique_taxids) \
+                .to_sql("ncbitaxonomy", sqlite3.connect(Args['output']),
+                        index=False, if_exists=Args['tablemode'])
 
 
 # Argument parser
@@ -81,6 +90,14 @@ genomes.add_argument('--noeukaryotes', action='store_true',
                      help='do not download eukaryote genomes')
 genomes.add_argument('--noviruses', action='store_true',
                      help='do not download viral genomes')
+# Add arguments specific for taxonomic table
+taxonomy = Parser.add_argument_group("Generate taxonomy table for observed "
+                                     "taxonomic IDS")
+taxonomy.add_argument('--notaxonomy', action='store_true',
+                      help='do not infer the taxonomy lineages for observed '
+                           'genomes')
+taxonomy.add_argument('--updateNCBItaxonomy', action='store_true',
+                      help='update the NCBI taxonomy file used by ete3')
 Args = vars(Parser.parse_args())
 
 if __name__ == '__main__':
