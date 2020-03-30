@@ -74,3 +74,58 @@ def download_genomes(config, datavalue):
     return [protein_df, taxid_df]
 
 
+def soup_extract_enzymelinks(tabletag):
+    """Extract all URLs for enzyme families from first table."""
+    return {link.string: link['href']
+            for link in tabletag.find_all("a", href=True)}
+
+
+def soup_parse_proteins(url, family):
+    """Parse all proteins of a enzyme family."""
+    http = urllib3.PoolManager()
+    r = http.request('GET', url)
+    soup = BeautifulSoup(r.data, 'html.parser')
+
+    # Generate Pandas DataFrame
+    df = pd.read_html(str(soup.find_all("table")[-1]),
+                      skiprows=2, header=0)[0]
+    if df.columns[-1] == 'Unnamed: 6':
+        df = df.rename(columns={'Unnamed: 6': 'Subf'})
+    # Remove empty or subheader rows and add family
+    return df.loc[~((df.drop(['Protein Name'], axis=1).isna().sum(axis=1) == 6) |
+                    ((df['Protein Name'] == 'Protein Name') &
+                     (df['EC#'] == 'EC#')))] \
+        .assign(family=family)
+
+
+def download_enzymes(config, datavalue):
+    """Download enzymes from cazy.org.
+
+    Parameters:
+    = config: dictionary with information on urls specific to the CAZy website
+    - datavalue: specify with subset of CAZYMES to download, e.g.
+      GlycosideHydrolase
+
+    """
+    url = config['CAZYBASEURL'] + "/" + config['CAZYMES'][datavalue]
+
+    family_abbr = {'GlycosideHydrolase'         : 'GH',
+                   'GlycosylTransferases'       : 'GT',
+                   'PolysaccharideLyases'       : 'PL',
+                   'CarbohydrateEsterases'      : 'CE',
+                   'AuxiliaryActivities'        : 'AA',
+                   'CarbohydrateBindingModules' : 'CBM'}
+
+    http = urllib3.PoolManager()
+    r = http.request('GET', url)
+    soup = BeautifulSoup(r.data, 'html.parser')
+
+    # Parse all classified enzyme families
+    enzyme_family_links = soup_extract_enzymelinks(soup.find_all("table")[0])
+    # Add unclassified sequences
+    enzyme_family_links['unclassified'] = soup.find_all("table")[1] \
+        .find_all("a", href=True)[0]['href']
+    enzyme_entries = pd.concat([soup_parse_proteins(config['CAZYBASEURL'] + "/"
+                                                    + url.replace(".html", "_all.html?debut_PRINC=10000000"),
+                                                    family_abbr[datavalue] + family)
+                                for family, url in enzyme_family_links.items()])

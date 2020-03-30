@@ -1,6 +1,15 @@
 {
     "CAZYBASEURL" : "http://www.cazy.org",
 
+    "CAZYMES" : {
+        "GlycosideHydrolase" : "Glycoside-Hydrolases.html",
+        "GlycosylTransferases" : "GlycosylTransferases.html",
+        "PolysaccharideLyases" : "Polysaccharide-Lyases.html",
+        "CarbohydrateEsterases" : "Carbohydrate-Esterases.html",
+        "AuxiliaryActivities" : "Auxiliary-Activities.html",
+        "CarbohydrateBindingModules" : "Carbohydrate-Binding-Modules.html"
+    },
+
     "CAZYGENOMES" : {
          "archaea"    : "a.html",
          "bacteria"   : "b.html",
